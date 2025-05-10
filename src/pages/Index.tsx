@@ -1,17 +1,26 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Document } from '@/types/document';
 import { documentService } from '@/services/documentService';
+import { mongoDBService } from '@/services/mongoDBService';
 import SearchBar from '@/components/SearchBar';
 import DocumentCard from '@/components/DocumentCard';
+import MongoDBConnector from '@/components/MongoDBConnector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, FileSearch, Tag } from 'lucide-react';
+import { BookOpen, FileSearch, Tag, Database } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const Index = () => {
   const [searchResults, setSearchResults] = useState<Document[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [isMongoConnected, setIsMongoConnected] = useState(false);
+
+  useEffect(() => {
+    // Check MongoDB connection status on mount
+    setIsMongoConnected(mongoDBService.isConnected());
+  }, []);
 
   const handleSearch = (query: string, isHybrid: boolean) => {
     setSearchQuery(query);
@@ -27,6 +36,12 @@ const Index = () => {
       : documentService.keywordSearch(query);
     
     setSearchResults(results);
+  };
+
+  const handleDisconnect = () => {
+    mongoDBService.disconnect();
+    setIsMongoConnected(false);
+    toast.success('MongoDB disconnected');
   };
 
   // Filter results by category when tab changes
@@ -60,8 +75,28 @@ const Index = () => {
           </p>
         </div>
         
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center items-center mb-10 flex-col gap-4">
           <SearchBar onSearch={handleSearch} />
+          
+          <div className="flex gap-2">
+            {isMongoConnected ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-green-600 flex items-center">
+                  <Database size={16} className="mr-1" /> MongoDB Connected
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleDisconnect}
+                  className="text-gray-500 hover:text-red-500"
+                >
+                  Disconnect
+                </Button>
+              </div>
+            ) : (
+              <MongoDBConnector onConnected={setIsMongoConnected} />
+            )}
+          </div>
         </div>
         
         {searchPerformed && (
