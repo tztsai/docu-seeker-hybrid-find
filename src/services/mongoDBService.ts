@@ -1,6 +1,5 @@
 
 // This service handles MongoDB connection status in the client
-// The actual connection happens on the backend
 
 /**
  * Check if the user has a MongoDB connection

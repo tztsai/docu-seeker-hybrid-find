@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -58,19 +57,21 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
             <User size={14} />
             <span>{document.author}</span>
           </div>
-          <div className="flex flex-wrap gap-1 items-center">
-            <Tag size={14} />
-            {document.tags.slice(0, 3).map((tag, index) => (
-              <Badge key={index} variant="secondary" className="font-normal text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {document.tags.length > 3 && (
-              <Badge variant="secondary" className="font-normal text-xs">
-                +{document.tags.length - 3}
-              </Badge>
-            )}
-          </div>
+          {document.tags && document.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 items-center">
+              <Tag size={14} />
+              {document.tags.slice(0, 3).map((tag, index) => (
+                <Badge key={index} variant="secondary" className="font-normal text-xs">
+                  {tag}
+                </Badge>
+              ))}
+              {document.tags.length > 3 && (
+                <Badge variant="secondary" className="font-normal text-xs">
+                  +{document.tags.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
         </CardFooter>
       </Card>
     </Link>

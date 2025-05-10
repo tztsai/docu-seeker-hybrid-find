@@ -56,7 +56,9 @@ const MongoDBConnector: React.FC<MongoDBConnectorProps> = ({ onConnected }) => {
     setIsConnecting(true);
     
     try {
-      const result = await apiClient.connectToMongoDB(data.uri);
+      const result = await apiClient.connectToMongoDB(
+        data.uri, 'jkteachings', 'teachings'
+      );
       
       toast.success(`Successfully connected to MongoDB v${result.version}!`);
       if (onConnected) onConnected(true);

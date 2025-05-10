@@ -1,27 +1,47 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
-  ArrowLeft, Calendar, User, Tag, Bookmark, Share2 
+  ArrowLeft, Calendar, User, Tag, Bookmark, Share2, AlertCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { documentService } from '@/services/documentService';
+import { mongoDBService } from '@/services/mongoDBService';
+import { apiClient } from '@/services/apiClient';
 import { Document } from '@/types/document';
 
 const DocumentDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const doc = documentService.getDocumentById(id);
-      if (doc) {
-        setDocument(doc);
+    const fetchDocument = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }
+
+      try {
+        // Check if MongoDB is connected
+        const isConnected = mongoDBService.isConnected();
+
+        if (isConnected) {
+          // Use API to fetch document
+          const doc = await apiClient.getDocument(id);
+          setDocument(doc);
+        } else {
+          setError('Please connect to MongoDB to view documents');
+        }
+      } catch (err) {
+        console.error('Error fetching document:', err);
+        setError('Failed to load document. Please check your MongoDB connection.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocument();
   }, [id]);
 
   if (loading) {
@@ -41,7 +61,7 @@ const DocumentDetail = () => {
     );
   }
 
-  if (!document) {
+  if (error || !document) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
@@ -49,8 +69,11 @@ const DocumentDetail = () => {
             <ArrowLeft size={18} className="mr-1" /> Back to search
           </Link>
           <div className="text-center py-12">
+            <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
             <h1 className="text-3xl font-bold text-gray-800 mb-4">Document Not Found</h1>
-            <p className="text-gray-600 mb-6">The document you're looking for doesn't exist or has been removed.</p>
+            <p className="text-gray-600 mb-6">
+              {error || "The document you're looking for doesn't exist or has been removed."}
+            </p>
             <Button asChild>
               <Link to="/">Return to Search</Link>
             </Button>

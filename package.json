@@ -1,14 +1,20 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "mongodb-search",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "dev:server": "NODE_ENV=development python server/server.py",
+    "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
+    "build": "tsc && vite build",
+    "build:dev": "tsc && vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "python server/server.py",
+    "start": "NODE_ENV=production python server/server.py",
+    "heroku-postbuild": "npm run build",
+    "setup:search": "node scripts/setup-atlas-search.js",
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -43,11 +49,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "compression": "^1.8.0",
     "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.3.0",
+    "helmet": "^8.1.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
     "mongodb": "^6.16.0",
+    "morgan": "^1.10.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -70,9 +80,13 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
+    "body-parser": "^2.2.0",
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.5",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
+    "express": "^5.1.0",
     "globals": "^15.9.0",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
@@ -80,5 +94,6 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

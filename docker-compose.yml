@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  mongodb-search-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB_NAME=${MONGODB_DB_NAME:-search_demo}
+      - MONGODB_COLLECTION=${MONGODB_COLLECTION:-documents}
+    restart: unless-stopped

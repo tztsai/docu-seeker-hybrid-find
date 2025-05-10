@@ -1,48 +1,72 @@
-
-import { mockApiService } from './mockApiService';
+import { Document } from '@/types/document';
+import { API_ENDPOINTS } from '@/config/env';
 
 /**
  * API Client
  * 
- * This service abstracts the API calls for the application.
- * In development, it uses mock responses.
- * In production, replace with actual API calls.
+ * This service handles all API calls for MongoDB.
  */
 
-// Check if we're in development mode
-const isDevelopment = import.meta.env.DEV || !import.meta.env.PROD;
-
 // Connect to MongoDB
-const connectToMongoDB = async (uri: string): Promise<any> => {
-  if (isDevelopment) {
-    // Use mock in development
-    const response = await mockApiService.mockMongoDBConnect(uri);
-    
-    if (!response.success) {
-      throw new Error(response.error);
-    }
-    
-    return response;
-  } else {
-    // Use actual API in production
-    const response = await fetch('/api/mongodb/connect', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ uri }),
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to connect to MongoDB');
-    }
-    
-    return data;
+const connectToMongoDB = async (uri: string, dbName = 'search_demo', collectionName = 'documents'): Promise<any> => {
+  const response = await fetch(API_ENDPOINTS.MONGODB_CONNECT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ uri, dbName, collectionName }),
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to connect to MongoDB');
   }
+  
+  return data;
+};
+
+// Search documents using MongoDB hybrid search
+const searchDocuments = async (
+  query: string, 
+  isHybridSearch: boolean = false, 
+  limit: number = 20
+): Promise<Document[]> => {
+  const response = await fetch(API_ENDPOINTS.MONGODB_SEARCH, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      query, 
+      isHybridSearch, 
+      limit 
+    }),
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.error || 'Search failed');
+  }
+  
+  return data.results;
+};
+
+// Get document by ID
+const getDocument = async (id: string): Promise<Document> => {
+  const response = await fetch(API_ENDPOINTS.MONGODB_DOCUMENT(id));
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to retrieve document');
+  }
+  
+  return data;
 };
 
 export const apiClient = {
   connectToMongoDB,
+  searchDocuments,
+  getDocument,
 };

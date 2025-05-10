@@ -1,54 +1,82 @@
-# Welcome to your Lovable project
+# MongoDB Search Application
 
-## Project info
+A production-ready web application for searching documents using MongoDB Atlas Search capabilities. This application demonstrates how to implement hybrid search combining keyword-based and semantic search techniques.
 
-**URL**: https://lovable.dev/projects/9e170e3f-4f1f-452b-98fb-75386ffdee4f
+![MongoDB Search](https://mongodb-devrel-media.s3.amazonaws.com/social/mongodb-search-banner.png)
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Powerful Search**: Utilize MongoDB's hybrid search capabilities combining traditional text search with vector-based semantic search
+- **Real-time Results**: Get immediate search results with query highlighting
+- **Category Filtering**: Filter search results by document categories
+- **Document Details**: View complete document information with rich formatting
+- **Responsive Design**: Works on desktop and mobile devices
+- **Production Ready**: Includes server-side rendering, error handling, and deployment configurations
 
-**Use Lovable**
+## Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/9e170e3f-4f1f-452b-98fb-75386ffdee4f) and start prompting.
+- **Frontend**: React + TypeScript with shadcn/ui components
+- **Backend**: Express.js server with MongoDB Node.js driver
+- **Database**: MongoDB Atlas with Atlas Search
+- **Styling**: Tailwind CSS
+- **Deployment**: Docker support, environment configuration
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js 18+ or Docker
+- MongoDB Atlas account (free tier or above)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Quick Start
 
-Follow these steps:
+1. Clone the repository:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+git clone https://github.com/yourusername/mongodb-search.git
+cd mongodb-search
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+npm install
+```
 
-**Use GitHub Codespaces**
+3. Set up environment variables:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+cp .env.example .env
+```
+
+Edit the `.env` file with your MongoDB Atlas connection string and other settings.
+
+4. Run the development server:
+
+```sh
+npm run dev:full
+```
+
+5. Open [http://localhost:5173](http://localhost:5173) in your browser
+
+### MongoDB Atlas Setup
+
+1. Create a MongoDB Atlas account and cluster
+2. Set up Atlas Search for your collection (see `DEPLOYMENT.md` for detailed instructions)
+3. Create a database user and note the connection string
+
+## Deployment
+
+See `DEPLOYMENT.md` for detailed deployment instructions, including:
+
+- Local deployment
+- Docker deployment
+- Cloud hosting options (Heroku, Vercel, etc.)
+
+## Documentation
+
+- [MongoDB Atlas Search Documentation](https://www.mongodb.com/docs/atlas/atlas-search/)
+- [Vector Search Tutorial](https://www.mongodb.com/docs/atlas/atlas-vector-search/)
 
 ## What technologies are used for this project?
 

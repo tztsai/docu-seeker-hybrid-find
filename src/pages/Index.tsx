@@ -1,67 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { Document } from '@/types/document';
-import { documentService } from '@/services/documentService';
 import { mongoDBService } from '@/services/mongoDBService';
+import { apiClient } from '@/services/apiClient';
 import SearchBar from '@/components/SearchBar';
 import DocumentCard from '@/components/DocumentCard';
 import MongoDBConnector from '@/components/MongoDBConnector';
+import AppInfo from '@/components/AppInfo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, FileSearch, Tag, Database } from 'lucide-react';
+import { BookOpen, FileSearch, Tag, Database, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useSearchState } from '@/hooks/useSearchState';
 
 const Index = () => {
-  const [searchResults, setSearchResults] = useState<Document[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchPerformed, setSearchPerformed] = useState(false);
+  const { 
+    searchResults, 
+    searchQuery, 
+    searchPerformed, 
+    isSearching, 
+    executeSearch, 
+    clearSearch 
+  } = useSearchState();
+  
   const [activeTab, setActiveTab] = useState('all');
   const [isMongoConnected, setIsMongoConnected] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     // Check MongoDB connection status on mount
     setIsMongoConnected(mongoDBService.isConnected());
   }, []);
 
-  const handleSearch = (query: string, isHybrid: boolean) => {
-    setSearchQuery(query);
-    setSearchPerformed(true);
-    
-    if (query.trim() === '') {
-      setSearchResults(documentService.getAllDocuments());
+  const handleSearch = async (query: string, isHybrid: boolean) => {
+    if (!isMongoConnected) {
+      toast.error('Please connect to MongoDB first');
       return;
     }
     
-    const results = isHybrid 
-      ? documentService.hybridSearch(query) 
-      : documentService.keywordSearch(query);
+    if (query.trim() === '') {
+      clearSearch();
+      return;
+    }
     
-    setSearchResults(results);
+    try {
+      await executeSearch({ query, isHybrid });
+      
+      // Extract unique categories
+      const uniqueCategories = [...new Set(searchResults
+        .map(doc => doc.category)
+        .filter(Boolean))];
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error('Search failed. Please try again or check your connection.');
+    }
   };
 
   const handleDisconnect = () => {
     mongoDBService.disconnect();
     setIsMongoConnected(false);
+    clearSearch();
     toast.success('MongoDB disconnected');
   };
 
-  // Filter results by category when tab changes
+  // Filter results by category when tab changes, handle null categories
   const filteredResults = activeTab === 'all' 
     ? searchResults 
     : searchResults.filter(doc => 
-        doc.category.toLowerCase() === activeTab.toLowerCase());
+        doc.category?.toLowerCase() === activeTab.toLowerCase());
 
-  // Group documents by category for initial display
-  const allDocuments = documentService.getAllDocuments();
-  const documentsByCategory: Record<string, Document[]> = {};
-  
-  allDocuments.forEach(doc => {
-    if (!documentsByCategory[doc.category]) {
-      documentsByCategory[doc.category] = [];
-    }
-    documentsByCategory[doc.category].push(doc);
-  });
-
-  const categories = Object.keys(documentsByCategory);
+  // Helper function to highlight search terms in text
+  const highlightSearchTerms = (text: string, query: string): string => {
+    if (!query) return text;
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<span class="bg-search-highlight">$1</span>');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,7 +111,7 @@ const Index = () => {
             )}
           </div>
         </div>
-        
+
         {searchPerformed && (
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-6">
@@ -110,7 +123,7 @@ const Index = () => {
               </span>
             </div>
 
-            {searchResults.length > 0 && (
+            {searchResults.length > 0 && categories.length > 0 && (
               <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-6">
                 <TabsList>
                   <TabsTrigger value="all" className="flex items-center gap-1">
@@ -122,7 +135,9 @@ const Index = () => {
                       key={category} 
                       value={category.toLowerCase()} 
                       className="flex items-center gap-1"
-                      disabled={!searchResults.some(doc => doc.category.toLowerCase() === category.toLowerCase())}
+                      disabled={!searchResults.some(doc => 
+                        doc.category?.toLowerCase() === category.toLowerCase()
+                      )}
                     >
                       <Tag size={16} />
                       <span>{category}</span>
@@ -132,14 +147,19 @@ const Index = () => {
               </Tabs>
             )}
             
-            {filteredResults.length > 0 ? (
+            {isSearching ? (
+              <div className="text-center py-12">
+                <Loader2 size={40} className="mx-auto text-search-primary animate-spin mb-4" />
+                <p className="text-gray-600">Searching documents...</p>
+              </div>
+            ) : filteredResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                 {filteredResults.map((doc) => (
                   <DocumentCard 
                     key={doc.id} 
                     document={doc} 
                     searchQuery={searchQuery}
-                    highlightText={documentService.highlightSearchTerms} 
+                    highlightText={highlightSearchTerms} 
                   />
                 ))}
               </div>
@@ -155,45 +175,17 @@ const Index = () => {
           </div>
         )}
         
-        {!searchPerformed && (
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Browse by Category</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {categories.map(category => (
-                <div key={category} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-medium text-gray-800 mb-4 flex items-center">
-                    <Tag size={20} className="mr-2 text-search-primary" />
-                    {category} 
-                    <span className="text-gray-500 text-sm ml-2">
-                      ({documentsByCategory[category].length})
-                    </span>
-                  </h3>
-                  
-                  <ul className="space-y-3">
-                    {documentsByCategory[category].slice(0, 3).map(doc => (
-                      <li key={doc.id} className="truncate">
-                        <a 
-                          href={`/document/${doc.id}`} 
-                          className="text-search-primary hover:underline flex items-start"
-                        >
-                          <BookOpen size={16} className="mr-2 mt-1 flex-shrink-0" />
-                          <span>{doc.title}</span>
-                        </a>
-                      </li>
-                    ))}
-                    
-                    {documentsByCategory[category].length > 3 && (
-                      <li className="text-sm text-gray-500 pl-6">
-                        + {documentsByCategory[category].length - 3} more documents
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              ))}
-            </div>
+        {!searchPerformed && !isMongoConnected && (
+          <div className="max-w-6xl mx-auto text-center py-12">
+            <Database size={64} className="mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600 mb-6">
+              Please connect to MongoDB to start searching your documents
+            </p>
           </div>
         )}
+
+        {/* App Information */}
+        <AppInfo />
       </div>
     </div>
   );
