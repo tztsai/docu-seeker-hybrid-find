@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from bson.json_util import dumps, loads
+from mangum import Mangum
 import json
 
 # Configure logging
@@ -191,6 +192,8 @@ async def get_document(id: str):
     except Exception as e:
         logger.error(f"[GET] Failed to retrieve document {id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+handler = Mangum(app)
 
 if __name__ == "__main__":
     import uvicorn

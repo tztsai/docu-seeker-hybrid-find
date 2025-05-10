@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "NODE_ENV=development python server/server.py",
-    "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
+    "dev:full": "concurrently 'npm run dev' 'npm run dev:server'",
     "build": "tsc && vite build",
     "build:dev": "tsc && vite build --mode development",
     "lint": "eslint .",
@@ -14,7 +14,7 @@
     "server": "python server/server.py",
     "start": "NODE_ENV=production python server/server.py",
     "heroku-postbuild": "npm run build",
-    "setup:search": "node scripts/setup-atlas-search.js",
+    "setup:search": "node scripts/setup-atlas-search.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
