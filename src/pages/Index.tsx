@@ -13,38 +13,37 @@ import { toast } from 'sonner';
 import { useSearchState } from '@/hooks/useSearchState';
 
 const Index = () => {
-  const { 
-    searchResults, 
-    searchQuery, 
-    searchPerformed, 
-    isSearching, 
-    executeSearch, 
-    clearSearch 
+  const {
+    searchResults,
+    searchQuery,
+    searchPerformed,
+    isSearching,
+    executeSearch,
+    clearSearch
   } = useSearchState();
-  
+
   const [activeTab, setActiveTab] = useState('all');
   const [isMongoConnected, setIsMongoConnected] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    // Check MongoDB connection status on mount
-    setIsMongoConnected(mongoDBService.isConnected());
+    // Check MongoDB connection status on mount via API
+    const checkConnection = async () => {
+      const connected = await mongoDBService.checkConnectionStatus();
+      setIsMongoConnected(connected);
+    };
+    checkConnection();
   }, []);
 
   const handleSearch = async (query: string, isHybrid: boolean) => {
-    if (!isMongoConnected) {
-      toast.error('Please connect to MongoDB first');
-      return;
-    }
-    
     if (query.trim() === '') {
       clearSearch();
       return;
     }
-    
+
     try {
       await executeSearch({ query, isHybrid });
-      
+
       // Extract unique categories
       const uniqueCategories = [...new Set(searchResults
         .map(doc => doc.category)
@@ -56,18 +55,11 @@ const Index = () => {
     }
   };
 
-  const handleDisconnect = () => {
-    mongoDBService.disconnect();
-    setIsMongoConnected(false);
-    clearSearch();
-    toast.success('MongoDB disconnected');
-  };
-
   // Filter results by category when tab changes, handle null categories
-  const filteredResults = activeTab === 'all' 
-    ? searchResults 
-    : searchResults.filter(doc => 
-        doc.category?.toLowerCase() === activeTab.toLowerCase());
+  const filteredResults = activeTab === 'all'
+    ? searchResults
+    : searchResults.filter(doc =>
+      doc.category?.toLowerCase() === activeTab.toLowerCase());
 
   // Helper function to highlight search terms in text
   const highlightSearchTerms = (text: string, query: string): string => {
@@ -87,29 +79,9 @@ const Index = () => {
             Search your documents using MongoDB's hybrid search technology combining keywords and semantic understanding
           </p>
         </div>
-        
+
         <div className="flex justify-center items-center mb-10 flex-col gap-4">
           <SearchBar onSearch={handleSearch} />
-          
-          <div className="flex gap-2">
-            {isMongoConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-green-600 flex items-center">
-                  <Database size={16} className="mr-1" /> MongoDB Connected
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleDisconnect}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  Disconnect
-                </Button>
-              </div>
-            ) : (
-              <MongoDBConnector onConnected={setIsMongoConnected} />
-            )}
-          </div>
         </div>
 
         {searchPerformed && (
@@ -131,11 +103,11 @@ const Index = () => {
                     <span>All</span>
                   </TabsTrigger>
                   {categories.map(category => (
-                    <TabsTrigger 
-                      key={category} 
-                      value={category.toLowerCase()} 
+                    <TabsTrigger
+                      key={category}
+                      value={category.toLowerCase()}
                       className="flex items-center gap-1"
-                      disabled={!searchResults.some(doc => 
+                      disabled={!searchResults.some(doc =>
                         doc.category?.toLowerCase() === category.toLowerCase()
                       )}
                     >
@@ -146,7 +118,7 @@ const Index = () => {
                 </TabsList>
               </Tabs>
             )}
-            
+
             {isSearching ? (
               <div className="text-center py-12">
                 <Loader2 size={40} className="mx-auto text-search-primary animate-spin mb-4" />
@@ -155,11 +127,11 @@ const Index = () => {
             ) : filteredResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                 {filteredResults.map((doc) => (
-                  <DocumentCard 
-                    key={doc.id} 
-                    document={doc} 
+                  <DocumentCard
+                    key={doc.id}
+                    document={doc}
                     searchQuery={searchQuery}
-                    highlightText={highlightSearchTerms} 
+                    highlightText={highlightSearchTerms}
                   />
                 ))}
               </div>
@@ -174,13 +146,16 @@ const Index = () => {
             )}
           </div>
         )}
-        
+
         {!searchPerformed && !isMongoConnected && (
           <div className="max-w-6xl mx-auto text-center py-12">
             <Database size={64} className="mx-auto text-gray-400 mb-4" />
             <p className="text-gray-600 mb-6">
               Please connect to MongoDB to start searching your documents
             </p>
+            <div className='flex justify-center items-center gap-4'>
+              <MongoDBConnector onConnected={setIsMongoConnected} />
+            </div>
           </div>
         )}
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,6 +44,7 @@ interface MongoDBConnectorProps {
 const MongoDBConnector: React.FC<MongoDBConnectorProps> = ({ onConnected }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -51,6 +52,24 @@ const MongoDBConnector: React.FC<MongoDBConnectorProps> = ({ onConnected }) => {
       uri: "",
     },
   });
+
+  // Check if MongoDB is already connected when component mounts
+  useEffect(() => {
+    const checkConnectionStatus = async () => {
+      try {
+        const connected = await apiClient.checkConnection();
+        setIsConnected(connected);
+        if (connected && onConnected) {
+          onConnected(true);
+          toast.success("MongoDB connection is already established");
+        }
+      } catch (error) {
+        console.error("Error checking connection status:", error);
+      }
+    };
+    
+    checkConnectionStatus();
+  }, [onConnected]);
 
   const onSubmit = async (data: FormValues) => {
     setIsConnecting(true);
@@ -62,9 +81,9 @@ const MongoDBConnector: React.FC<MongoDBConnectorProps> = ({ onConnected }) => {
       
       toast.success(`Successfully connected to MongoDB v${result.version}!`);
       if (onConnected) onConnected(true);
+      setIsConnected(true);
       setIsOpen(false);
-      localStorage.setItem('mongodb_connected', 'true');
-      // We're not storing the URI for security reasons
+      // Connection status is now managed server-side through the API
     } catch (error) {
       toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
@@ -76,11 +95,11 @@ const MongoDBConnector: React.FC<MongoDBConnectorProps> = ({ onConnected }) => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button 
-          variant="outline" 
+          variant={isConnected ? "secondary" : "outline"}
           className="flex items-center gap-2"
         >
           <Database size={18} />
-          Connect to MongoDB
+          {isConnected ? 'MongoDB Connected' : 'Connect to MongoDB'}
         </Button>
       </SheetTrigger>
       <SheetContent>

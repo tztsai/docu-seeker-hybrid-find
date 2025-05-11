@@ -1,16 +1,21 @@
+import logging
+import json
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from bson import ObjectId
-import logging
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from bson.json_util import dumps, loads
 from mangum import Mangum
-import json
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -29,8 +34,23 @@ app.add_middleware(
 
 # Global variables
 mongo_client = None
-db_name = "jkteachings"
-collection_name = "teachings"
+db_name = os.getenv("MONGODB_DB_NAME")
+collection_name = os.getenv("MONGODB_COLLECTION")
+
+# Initialize MongoDB connection from environment variables
+mongodb_uri = os.getenv("MONGODB_URI")
+if mongodb_uri:
+    try:
+        logger.info("Attempting to connect to MongoDB using MONGODB_URI from environment...")
+        mongo_client = MongoClient(mongodb_uri, server_api=ServerApi('1'))
+        # Test connection with ping
+        mongo_client.admin.command('ping')
+        server_info = mongo_client.admin.command('serverStatus')
+        logger.info(f"Successfully connected to MongoDB {server_info.get('version')}")
+        logger.info(f"Using database: {db_name}, collection: {collection_name}")
+    except Exception as e:
+        logger.error(f"Failed to connect using MONGODB_URI: {str(e)}")
+        mongo_client = None
 
 # Request models
 class ConnectRequest(BaseModel):
@@ -78,6 +98,22 @@ async def connect_mongodb(request: ConnectRequest):
         logger.error(f"[CONNECT] Connection failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# New endpoint to check connection status
+@app.get("/api/mongodb/status")
+async def check_connection_status():
+    global mongo_client
+    
+    if not mongo_client:
+        return {"connected": False}
+    
+    try:
+        # Test connection with ping
+        mongo_client.admin.command('ping')
+        return {"connected": True}
+    except Exception as e:
+        logger.error(f"[STATUS] Connection check failed: {str(e)}")
+        return {"connected": False}
+
 # Search documents endpoint
 @app.post("/api/mongodb/search")
 async def search_documents(request: SearchRequest):
@@ -93,10 +129,18 @@ async def search_documents(request: SearchRequest):
         logger.info(f"[SEARCH] Document count: {collection.count_documents({})}")
         
         if request.isHybridSearch:
+            # Atlas Search indexes don't show up in collection.index_information()
+            # They're managed by Atlas and need to be referenced by name
+            logger.info("[SEARCH] Using Atlas Search for hybrid search")
+
+            # Use the search index for the teachings collection
+            search_index = os.environ.get("MONGODB_INDEX_NAME")
+            logger.info(f"[SEARCH] Using search index: {search_index}")
+            
             pipeline = [
                 {
                     "$search": {
-                        "index": "default",
+                        "index": search_index,
                         "compound": {
                             "should": [
                                 {
@@ -114,22 +158,24 @@ async def search_documents(request: SearchRequest):
                 { "$limit": request.limit },
                 {
                     "$project": {
-                        "_id": 0,
-                        "id": { "$toString": "$_id" },
+                        "_id": 1,
                         "title": 1,
                         "content": 1,
-                        "category": 1,
-                        "date": 1,
-                        "author": 1,
-                        "tags": 1,
-                        "highlights": { "$meta": "searchHighlights" }
+                        "highlights": { "$meta": "searchHighlights" },
+                        "Talk Type": 1,
+                        "Text source": 1,
+                        "Country": 1,
+                        "City": 1,
+                        "Date Code": 1,
+                        "url": 1,
+                        "author": 1
                     }
                 }
             ]
             
             # Convert BSON/SON objects to Python dictionaries
             cursor = collection.aggregate(pipeline)
-            results = json.loads(dumps(list(cursor)))
+            results = list(map(format_document, json.loads(dumps(list(cursor)))))
             logger.info("[SEARCH] Successfully executed aggregation pipeline")
         else:
             cursor = collection.find({
@@ -141,16 +187,8 @@ async def search_documents(request: SearchRequest):
                     {"tags": {"$regex": request.query, "$options": "i"}}
                 ]
             }).limit(request.limit)
-            
-            results = [{
-                "id": str(doc["_id"]),
-                "title": doc.get("title"),
-                "content": doc.get("content"),
-                "category": doc.get("category"),
-                "date": doc.get("date"),
-                "author": doc.get("author"),
-                "tags": doc.get("tags", [])
-            } for doc in cursor]
+
+            results = list(map(format_document, cursor))
 
         logger.info(f"[SEARCH] Found {len(results)} results")
         return {"results": results}
@@ -176,22 +214,36 @@ async def get_document(id: str):
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
         
-        formatted_doc = {
-            "id": str(doc["_id"]),
-            "title": doc.get("title"),
-            "content": doc.get("content"),
-            "category": doc.get("category"),
-            "date": doc.get("date"),
-            "author": doc.get("author"),
-            "tags": doc.get("tags", [])
-        }
-        
         logger.info(f"[GET] Successfully retrieved document: {id}")
-        return formatted_doc
+        return format_document(doc)
     
     except Exception as e:
         logger.error(f"[GET] Failed to retrieve document {id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+def format_document(doc: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "id": str(doc["_id"]),
+        "title": doc.get("title"),
+        "url": doc.get("url"),
+        "content": doc.get("content"),
+        "category": doc.get("Talk Type"),
+        "date": decode_date(doc.get("Date Code")),
+        "author": doc.get("author", "Krishnamurti"),
+        "tags": [doc[k] for k in ['Text source', 'Country', 'City'] if doc.get(k)],
+        "highlights": doc.get("highlights"),
+    }
+
+def decode_date(datecode: str) -> Optional[str]:
+    if not isinstance(datecode, str) or not datecode.isdigit():
+        return None
+    y, m, d = [datecode[i:i+2] for i in range(0, len(datecode), 2)]
+    try:
+        date = datetime.strptime(f"{y}-{m}-{d}", "%y-%m-%d")
+        return date.strftime("%Y-%m-%d")
+    except ValueError:
+        logger.error(f"Invalid date format: {datecode}")
+        return None
 
 handler = Mangum(app)
 

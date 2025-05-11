@@ -13,6 +13,7 @@ export const API_BASE_URL = import.meta.env.PROD
 export const API_ENDPOINTS = {
   MONGODB_CONNECT: `${API_BASE_URL}/api/mongodb/connect`,
   MONGODB_SEARCH: `${API_BASE_URL}/api/mongodb/search`,
+  MONGODB_STATUS: `${API_BASE_URL}/api/mongodb/status`,
   MONGODB_DOCUMENT: (id: string) => `${API_BASE_URL}/api/mongodb/documents/${id}`,
 };
 

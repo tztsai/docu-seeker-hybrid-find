@@ -65,8 +65,24 @@ const getDocument = async (id: string): Promise<Document> => {
   return data;
 };
 
+// Check if MongoDB is already connected
+const checkConnectionStatus = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(API_ENDPOINTS.MONGODB_STATUS);
+    if (!response.ok) {
+      return false;
+    }
+    const data = await response.json();
+    return data.connected === true;
+  } catch (error) {
+    console.log('MongoDB connection check failed:', error);
+    return false;
+  }
+};
+
 export const apiClient = {
   connectToMongoDB,
   searchDocuments,
   getDocument,
+  checkConnection: checkConnectionStatus,
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { 
+import {
   ArrowLeft, Calendar, User, Tag, Bookmark, Share2, AlertCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,16 +23,8 @@ const DocumentDetail = () => {
       }
 
       try {
-        // Check if MongoDB is connected
-        const isConnected = mongoDBService.isConnected();
-
-        if (isConnected) {
-          // Use API to fetch document
-          const doc = await apiClient.getDocument(id);
-          setDocument(doc);
-        } else {
-          setError('Please connect to MongoDB to view documents');
-        }
+        const doc = await apiClient.getDocument(id);
+        setDocument(doc);
       } catch (err) {
         console.error('Error fetching document:', err);
         setError('Failed to load document. Please check your MongoDB connection.');
@@ -89,7 +81,7 @@ const DocumentDetail = () => {
         <Link to="/" className="flex items-center text-search-primary hover:underline mb-6">
           <ArrowLeft size={18} className="mr-1" /> Back to search
         </Link>
-        
+
         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
           <div className="flex justify-between items-start mb-6">
             <Badge variant="outline" className="text-sm font-medium">
@@ -104,9 +96,9 @@ const DocumentDetail = () => {
               </Button>
             </div>
           </div>
-          
+
           <h1 className="text-3xl font-bold text-gray-800 mb-4">{document.title}</h1>
-          
+
           <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-8">
             <div className="flex items-center">
               <Calendar size={16} className="mr-1" />
@@ -117,13 +109,13 @@ const DocumentDetail = () => {
               <span>{document.author}</span>
             </div>
           </div>
-          
+
           <div className="prose max-w-none">
             <p className="text-gray-700 whitespace-pre-line">
               {document.content}
             </p>
           </div>
-          
+
           <div className="mt-8 pt-6 border-t border-gray-100">
             <div className="flex items-center gap-2">
               <Tag size={16} className="text-gray-600" />
