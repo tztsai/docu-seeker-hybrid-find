@@ -1,17 +1,15 @@
-# MongoDB Search Application
+# Krishnamurti Wisdom Search Engine
 
-A production-ready web application for searching documents using MongoDB Atlas Search capabilities. This application demonstrates how to implement hybrid search combining keyword-based and semantic search techniques.
-
-![MongoDB Search](https://mongodb-devrel-media.s3.amazonaws.com/social/mongodb-search-banner.png)
+A MongoDB-powered search application for exploring the profound teachings of philosopher Jiddu Krishnamurti through a comprehensive database of transcribed talks, writings, and dialogues spanning over 60 years.
 
 ## Features
 
-- **Powerful Search**: Utilize MongoDB's hybrid search capabilities combining traditional text search with vector-based semantic search
-- **Real-time Results**: Get immediate search results with query highlighting
-- **Category Filtering**: Filter search results by document categories
-- **Document Details**: View complete document information with rich formatting
+- **MongoDB Atlas Search Integration**: Utilizes MongoDB's hybrid search for powerful search capabilities
+- **Score-Based Highlighting**: Emphasizes the most relevant passages with opacity-based highlighting
+- **Persistent Database Connection**: Automatically connects using environment variables
+- **Philosophical Theme**: UI designed to reflect the contemplative nature of Krishnamurti's teachings
+- **Category Filtering**: Filter teachings by categories like talks, dialogues, and writings
 - **Responsive Design**: Works on desktop and mobile devices
-- **Production Ready**: Includes server-side rendering, error handling, and deployment configurations
 
 ## Technology Stack
 
@@ -21,14 +19,56 @@ A production-ready web application for searching documents using MongoDB Atlas S
 - **Styling**: Tailwind CSS
 - **Deployment**: Docker support, environment configuration
 
-## Getting Started
+## Deployment Instructions for Vercel
 
 ### Prerequisites
 
-- Node.js 18+ or Docker
-- MongoDB Atlas account (free tier or above)
+- Node.js 18+ and Python 3.8+
+- MongoDB Atlas account with a database containing Krishnamurti's teachings
+- A Vercel account
 
-### Quick Start
+### Deploying to Vercel
+
+1. **Fork or clone this repository**
+
+2. **Set up environment variables in Vercel**
+
+   In the Vercel dashboard for your project, navigate to Settings > Environment Variables and add:
+
+   ```
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
+   MONGODB_DB_NAME=krishnamurti
+   MONGODB_COLLECTION=teachings
+   ```
+
+3. **Deploy to Vercel**
+
+   Connect your repository to Vercel and deploy. The `vercel.json` file in this repo already contains the necessary configuration for both the frontend and the Python API.
+
+4. **Set up MongoDB Atlas Search index**
+
+   Ensure your MongoDB Atlas cluster has a search index named "jk" on your collection with the following configuration:
+
+   ```json
+   {
+     "mappings": {
+       "dynamic": true,
+       "fields": {
+         "content": {
+           "type": "string"
+         },
+         "title": {
+           "type": "string"
+         },
+         "tags": {
+           "type": "string"
+         }
+       }
+     }
+   }
+   ```
+
+## Getting Started with Local Development
 
 1. Clone the repository:
 

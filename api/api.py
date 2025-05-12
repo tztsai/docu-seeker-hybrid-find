@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from bson.json_util import dumps, loads
-from mangum import Mangum
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -254,8 +253,6 @@ def decode_date(datecode: str) -> Optional[str]:
     except ValueError:
         logger.error(f"Invalid date format: {datecode}")
         return None
-
-handler = Mangum(app)
 
 if __name__ == "__main__":
     import uvicorn
