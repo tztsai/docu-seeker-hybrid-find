@@ -66,7 +66,12 @@ export default {
 				search: {
 					highlight: '#FFE082',
 					primary: '#2563EB',
-					secondary: '#4B5563'
+					secondary: '#4B5563',
+					highlight1: 'rgba(252, 211, 77, 0.3)',
+					highlight2: 'rgba(252, 211, 77, 0.5)',
+					highlight3: 'rgba(252, 211, 77, 0.7)',
+					highlight4: 'rgba(252, 211, 77, 0.85)',
+					highlight5: 'rgba(252, 211, 77, 1)'
 				}
 			},
 			borderRadius: {

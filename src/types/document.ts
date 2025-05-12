@@ -1,4 +1,9 @@
 
+export interface Highlight {
+  score: number;
+  content: string;
+}
+
 export interface Document {
   id: string;
   title: string;
@@ -7,4 +12,5 @@ export interface Document {
   date: string;
   author: string;
   tags: string[];
+  highlights?: Highlight[];
 }

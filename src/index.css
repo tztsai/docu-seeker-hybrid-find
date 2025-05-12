@@ -99,3 +99,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Search highlighting classes */
+.bg-search-highlight {
+  @apply bg-amber-300/80;
+}
+
+/* Score-based highlighting classes */
+.highlight-score-5 {
+  @apply bg-amber-300;
+}
+
+.highlight-score-4 {
+  @apply bg-amber-300/85;
+}
+
+.highlight-score-3 {
+  @apply bg-amber-300/70;
+}
+
+.highlight-score-2 {
+  @apply bg-amber-300/50;
+}
+
+.highlight-score-1 {
+  @apply bg-amber-300/30;
+}

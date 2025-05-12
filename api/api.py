@@ -36,6 +36,7 @@ app.add_middleware(
 mongo_client = None
 db_name = os.getenv("MONGODB_DB_NAME")
 collection_name = os.getenv("MONGODB_COLLECTION")
+_cache = {}
 
 # Initialize MongoDB connection from environment variables
 mongodb_uri = os.getenv("MONGODB_URI")
@@ -61,7 +62,7 @@ class ConnectRequest(BaseModel):
 class SearchRequest(BaseModel):
     query: str
     isHybridSearch: Optional[bool] = False
-    limit: Optional[int] = 20
+    limit: Optional[int] = 30
 
 # MongoDB connection endpoint
 @app.post("/api/mongodb/connect")
@@ -119,6 +120,8 @@ async def check_connection_status():
 async def search_documents(request: SearchRequest):
     logger.info("[SEARCH] Processing search request...")
     
+    _cache.clear()  # Clear cache for each search request
+    
     if not mongo_client:
         raise HTTPException(status_code=400, detail="Not connected to MongoDB")
     
@@ -158,7 +161,7 @@ async def search_documents(request: SearchRequest):
                 { "$limit": request.limit },
                 {
                     "$project": {
-                        "_id": 1,
+                        "_id": { "$toString": "$_id" },
                         "title": 1,
                         "content": 1,
                         "highlights": { "$meta": "searchHighlights" },
@@ -182,13 +185,13 @@ async def search_documents(request: SearchRequest):
                 "$or": [
                     {"title": {"$regex": request.query, "$options": "i"}},
                     {"content": {"$regex": request.query, "$options": "i"}},
-                    {"author": {"$regex": request.query, "$options": "i"}},
-                    {"category": {"$regex": request.query, "$options": "i"}},
-                    {"tags": {"$regex": request.query, "$options": "i"}}
+                    {"url": {"$regex": request.query, "$options": "i"}}
                 ]
             }).limit(request.limit)
 
-            results = list(map(format_document, cursor))
+            results = [format_document(doc, request.query) for doc in cursor]
+
+        _cache.update((doc["id"], doc) for doc in results)
 
         logger.info(f"[SEARCH] Found {len(results)} results")
         return {"results": results}
@@ -206,6 +209,9 @@ async def get_document(id: str):
     if not mongo_client:
         raise HTTPException(status_code=400, detail="Not connected to MongoDB")
     
+    if id in _cache:
+        return _cache[id]
+
     try:
         collection = mongo_client[db_name][collection_name]
         query = {"_id": ObjectId(id)} if len(id) == 24 else {"id": id}
@@ -221,7 +227,13 @@ async def get_document(id: str):
         logger.error(f"[GET] Failed to retrieve document {id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     
-def format_document(doc: Dict[str, Any]) -> Dict[str, Any]:
+def format_document(doc: Dict[str, Any], query: str = None) -> Dict[str, Any]:
+    if 'highlights' in doc:
+        for h in doc['highlights']:
+            h['content'] = ''.join(t['value'] for t in h['texts'])
+    elif query:
+        doc['highlights'] = [dict(score = 5, content = query)]
+
     return {
         "id": str(doc["_id"]),
         "title": doc.get("title"),
@@ -231,7 +243,7 @@ def format_document(doc: Dict[str, Any]) -> Dict[str, Any]:
         "date": decode_date(doc.get("Date Code")),
         "author": doc.get("author", "Krishnamurti"),
         "tags": [doc[k] for k in ['Text source', 'Country', 'City'] if doc.get(k)],
-        "highlights": doc.get("highlights"),
+        "highlights": doc.get("highlights", []),
     }
 
 def decode_date(datecode: str) -> Optional[str]:

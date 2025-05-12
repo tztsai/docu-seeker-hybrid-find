@@ -11,6 +11,7 @@ import { BookOpen, FileSearch, Tag, Database, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useSearchState } from '@/hooks/useSearchState';
+import { highlightTextWithScores } from '@/lib/utils';
 
 const Index = () => {
   const {
@@ -60,13 +61,6 @@ const Index = () => {
     ? searchResults
     : searchResults.filter(doc =>
       doc.category?.toLowerCase() === activeTab.toLowerCase());
-
-  // Helper function to highlight search terms in text
-  const highlightSearchTerms = (text: string, query: string): string => {
-    if (!query) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
-    return text.replace(regex, '<span class="bg-search-highlight">$1</span>');
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -131,7 +125,6 @@ const Index = () => {
                     key={doc.id}
                     document={doc}
                     searchQuery={searchQuery}
-                    highlightText={highlightSearchTerms}
                   />
                 ))}
               </div>
@@ -159,8 +152,7 @@ const Index = () => {
           </div>
         )}
 
-        {/* App Information */}
-        <AppInfo />
+        {/* <AppInfo /> */}
       </div>
     </div>
   );

@@ -4,31 +4,47 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, User, Tag } from 'lucide-react';
 import { Document } from '@/types/document';
 import { Link } from 'react-router-dom';
+import { highlightTextWithScores } from '@/lib/utils';
 
 interface DocumentCardProps {
   document: Document;
   searchQuery?: string;
-  highlightText?: (text: string, query: string) => string;
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({ 
-  document, 
-  searchQuery = '',
-  highlightText = (text) => text, 
+const DocumentCard: React.FC<DocumentCardProps> = ({
+  document,
+  searchQuery = ''
 }) => {
   // Truncate content for preview
-  const contentPreview = document.content.length > 200 
-    ? document.content.substring(0, 200) + '...' 
+  const contentPreview = document.content.length > 200
+    ? document.content.substring(0, 200) + '...'
     : document.content;
-  
-  // If we have a search query and highlight function, use it
-  const highlightedTitle = searchQuery 
-    ? <div dangerouslySetInnerHTML={{ __html: highlightText(document.title, searchQuery) }} /> 
-    : document.title;
-  
-  const highlightedContent = searchQuery 
-    ? <div dangerouslySetInnerHTML={{ __html: highlightText(contentPreview, searchQuery) }} />
-    : contentPreview;
+
+  // Use highlights array if available, otherwise fall back to search query
+  let highlightedTitle;
+  let highlightedContent;
+
+  if (document.highlights && document.highlights.length > 0) {
+    // Use score-based highlighting when we have highlight objects
+    highlightedTitle = <div dangerouslySetInnerHTML={{
+      __html: highlightTextWithScores(document.title, document.highlights)
+    }} />;
+
+    highlightedContent = <div dangerouslySetInnerHTML={{
+      __html: highlightTextWithScores(contentPreview, document.highlights)
+    }} />;
+  } else if (searchQuery) {
+    highlightedTitle = <div dangerouslySetInnerHTML={{
+      __html: highlightText(document.title, searchQuery)
+    }} />;
+
+    highlightedContent = <div dangerouslySetInnerHTML={{
+      __html: highlightText(contentPreview, searchQuery)
+    }} />;
+  } else {
+    highlightedTitle = document.title;
+    highlightedContent = contentPreview;
+  }
 
   return (
     <Link to={`/document/${document.id}`} className="block hover:no-underline">
@@ -76,6 +92,12 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
       </Card>
     </Link>
   );
+};
+
+const highlightText = (text: string, query: string): string => {
+  if (!query) return text;
+  const regex = new RegExp(`(${query})`, 'gi');
+  return text.replace(regex, '<span class="bg-search-highlight">$1</span>');
 };
 
 export default DocumentCard;

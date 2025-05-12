@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, User, Tag, Bookmark, Share2, AlertCircle
 } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { mongoDBService } from '@/services/mongoDBService';
 import { apiClient } from '@/services/apiClient';
 import { Document } from '@/types/document';
+import { highlightTextWithScores } from '@/lib/utils';
 
 const DocumentDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -111,9 +112,18 @@ const DocumentDetail = () => {
           </div>
 
           <div className="prose max-w-none">
-            <p className="text-gray-700 whitespace-pre-line">
-              {document.content}
-            </p>
+            {document.highlights && document.highlights.length > 0 ? (
+              <p 
+                className="text-gray-700 whitespace-pre-line"
+                dangerouslySetInnerHTML={{ 
+                  __html: highlightTextWithScores(document.content, document.highlights) 
+                }}
+              />
+            ) : (
+              <p className="text-gray-700 whitespace-pre-line">
+                {document.content}
+              </p>
+            )}
           </div>
 
           <div className="mt-8 pt-6 border-t border-gray-100">
