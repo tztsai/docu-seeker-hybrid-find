@@ -1,1 +1,2 @@
-# Just creating this directory - content in serverless.py
+# Expose the FastAPI app
+from .api import app
