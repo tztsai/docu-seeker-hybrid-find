@@ -7,20 +7,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Calculate opacity based on score value
- * @param score - Score from highlight
- * @returns Opacity value between 0.3 and 1.0
- */
-export function calculateOpacity(score: number): number {
-  // Map score to opacity: 0-2 → 0.3, 2-3 → 0.5, 3-4 → 0.7, 4-5 → 0.85, >= 5 → 1.0
-  if (score >= 5) return 1.0;
-  if (score >= 4) return 0.85;
-  if (score >= 3) return 0.7;
-  if (score >= 2) return 0.5;
-  return 0.3;
-}
-
-/**
  * Highlight text based on document highlights array with score-based opacity
  * @param text - Original text to highlight
  * @param highlights - Array of highlight objects with score and content
@@ -37,10 +23,10 @@ export function highlightTextWithScores(text: string, highlights: Highlight[] = 
     .forEach(highlight => {
       // Get the appropriate CSS class based on score
       const getCssClass = (score: number) => {
-        if (score >= 5) return 'highlight-score-5';
-        if (score >= 4) return 'highlight-score-4';
-        if (score >= 3) return 'highlight-score-3';
-        if (score >= 2) return 'highlight-score-2';
+        console.log('Highlight score:', score);
+        if (score >= 9) return 'highlight-score-4';
+        if (score >= 6) return 'highlight-score-3';
+        if (score >= 3) return 'highlight-score-2';
         return 'highlight-score-1';
       };
       

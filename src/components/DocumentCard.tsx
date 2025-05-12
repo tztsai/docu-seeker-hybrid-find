@@ -15,10 +15,35 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
   document,
   searchQuery = ''
 }) => {
-  // Truncate content for preview
-  const contentPreview = document.content.length > 200
-    ? document.content.substring(0, 200) + '...'
-    : document.content;
+  // Find the position of the first highlight in content if available
+  let startPosition = 0;
+  const maxPreviewLength = 360;
+
+  if (document.highlights && document.highlights.length > 0) {
+    // Sort by score to get the most relevant highlight first
+    const topHighlight = [...document.highlights].sort((a, b) => b.score - a.score)[0];
+    // Find position of this highlight in the content
+    startPosition = Math.max(0, document.content.indexOf(topHighlight.content) - 60); // Start 60 chars before highlight
+  } else if (searchQuery) {
+    // If no highlights but a search query exists, try to find the query in content
+    const queryPos = document.content.toLowerCase().indexOf(searchQuery.toLowerCase());
+    if (queryPos >= 0) {
+      startPosition = Math.max(0, queryPos - 60); // Start 60 chars before the search query match
+    }
+  }
+
+  // Create content preview starting from the highlight position
+  let contentPreview;
+  if (startPosition > 0) {
+    contentPreview = '...' + document.content.substring(
+      startPosition,
+      startPosition + maxPreviewLength
+    ) + (document.content.length > startPosition + maxPreviewLength ? '...' : '');
+  } else {
+    contentPreview = document.content.length > maxPreviewLength
+      ? document.content.substring(0, maxPreviewLength) + '...'
+      : document.content;
+  }
 
   // Use highlights array if available, otherwise fall back to search query
   let highlightedTitle;
@@ -47,42 +72,42 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
   }
 
   return (
-    <Link to={`/document/${document.id}`} className="block hover:no-underline">
-      <Card className="h-full hover:shadow-md transition-shadow duration-300">
+    <Link to={`/document/${document.id}`} className="block hover:no-underline h-full">
+      <Card className="h-full hover:shadow-md transition-all duration-300 border-l-4 border-l-amber-600/40 hover:border-l-amber-600 group bg-gradient-to-b from-white to-amber-50/30 flex flex-col">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-xl font-semibold text-left">
+            <CardTitle className="text-xl font-semibold text-left text-gray-800 group-hover:text-amber-900 transition-colors">
               {highlightedTitle}
             </CardTitle>
-            <Badge variant="outline" className="bg-gray-100">
+            <Badge variant="outline" className="bg-amber-50/60 text-amber-800 border-amber-200">
               {document.category}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="text-left">
-          <p className="text-gray-700 mb-4">
+        <CardContent className="text-left flex-grow">
+          <p className="text-gray-700 mb-1 text-sm leading-relaxed">
             {highlightedContent}
           </p>
         </CardContent>
-        <CardFooter className="pt-0 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+        <CardFooter className="pt-0 flex flex-wrap items-center gap-3 text-xs text-gray-500">
           <div className="flex items-center gap-1">
-            <Calendar size={14} />
+            <Calendar size={12} className="text-amber-700/60" />
             <span>{document.date}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <User size={14} />
-            <span>{document.author}</span>
-          </div>
+          {/* <div className="flex items-center gap-1">
+            <User size={12} className="text-amber-700/60" />
+            <span>{document.author || "J. Krishnamurti"}</span>
+          </div> */}
           {document.tags && document.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 items-center">
-              <Tag size={14} />
+              <Tag size={12} className="text-amber-700/60" />
               {document.tags.slice(0, 3).map((tag, index) => (
-                <Badge key={index} variant="secondary" className="font-normal text-xs">
+                <Badge key={index} variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
                   {tag}
                 </Badge>
               ))}
               {document.tags.length > 3 && (
-                <Badge variant="secondary" className="font-normal text-xs">
+                <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
                   +{document.tags.length - 3}
                 </Badge>
               )}

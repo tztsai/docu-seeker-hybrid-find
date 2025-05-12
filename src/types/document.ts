@@ -10,7 +10,7 @@ export interface Document {
   content: string;
   category: string;
   date: string;
-  author: string;
   tags: string[];
+  author?: string;
   highlights?: Highlight[];
 }

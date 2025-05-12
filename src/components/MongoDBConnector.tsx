@@ -95,19 +95,19 @@ const MongoDBConnector: React.FC<MongoDBConnectorProps> = ({ onConnected }) => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button 
-          variant={isConnected ? "secondary" : "outline"}
-          className="flex items-center gap-2"
+          variant={isConnected ? "secondary" : "default"}
+          className={`flex items-center gap-2 ${isConnected ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-amber-700 hover:bg-amber-800'}`}
         >
           <Database size={18} />
-          {isConnected ? 'MongoDB Connected' : 'Connect to MongoDB'}
+          {isConnected ? 'Connected to Archive' : 'Connect to Archive'}
         </Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Connect to MongoDB</SheetTitle>
+          <SheetTitle>Connect to Krishnamurti Archive</SheetTitle>
           <SheetDescription>
-            Enter your MongoDB connection URI to connect to your database cluster.
-            This connection will be used for document search operations.
+            Enter your MongoDB connection URI to access the Krishnamurti teaching archive.
+            This connection will allow you to search through decades of philosophical insights.
           </SheetDescription>
         </SheetHeader>
         

@@ -171,7 +171,6 @@ async def search_documents(request: SearchRequest):
                         "City": 1,
                         "Date Code": 1,
                         "url": 1,
-                        "author": 1
                     }
                 }
             ]
@@ -230,9 +229,10 @@ async def get_document(id: str):
 def format_document(doc: Dict[str, Any], query: str = None) -> Dict[str, Any]:
     if 'highlights' in doc:
         for h in doc['highlights']:
-            h['content'] = ''.join(t['value'] for t in h['texts'])
+            if h['path'] != 'title':
+                h['content'] = ''.join(t['value'] for t in h['texts'])
     elif query:
-        doc['highlights'] = [dict(score = 5, content = query)]
+        doc['highlights'] = [dict(score = 6, content = query)]
 
     return {
         "id": str(doc["_id"]),
@@ -241,7 +241,6 @@ def format_document(doc: Dict[str, Any], query: str = None) -> Dict[str, Any]:
         "content": doc.get("content"),
         "category": doc.get("Talk Type"),
         "date": decode_date(doc.get("Date Code")),
-        "author": doc.get("author", "Krishnamurti"),
         "tags": [doc[k] for k in ['Text source', 'Country', 'City'] if doc.get(k)],
         "highlights": doc.get("highlights", []),
     }
@@ -251,8 +250,7 @@ def decode_date(datecode: str) -> Optional[str]:
         return None
     y, m, d = [datecode[i:i+2] for i in range(0, len(datecode), 2)]
     try:
-        date = datetime.strptime(f"{y}-{m}-{d}", "%y-%m-%d")
-        return date.strftime("%Y-%m-%d")
+        return f"19{y}-{m}-{d}"
     except ValueError:
         logger.error(f"Invalid date format: {datecode}")
         return None
