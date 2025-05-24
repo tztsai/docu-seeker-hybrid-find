@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSearchState } from "@/hooks/useSearchState";
 import { highlightTextWithScores } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Index = () => {
   const {
@@ -153,100 +154,65 @@ const Index = () => {
             </div>
 
             <div className="mb-8">
-              <Tabs
-                defaultValue="all"
-                value={activeTab}
-                onValueChange={setActiveTab}
-              >
-                <TabsList className="bg-amber-50/50 border border-amber-100">
-                  <TabsTrigger
-                    value="all"
-                    className="flex items-center gap-1 data-[state=active]:bg-amber-100/70 data-[state=active]:text-amber-900"
-                  >
-                    <FileSearch size={16} />
-                    <span>All</span>
-                  </TabsTrigger>
-                  {categories.map((category) => (
-                    <TabsTrigger
-                      key={category}
-                      value={category.toLowerCase()}
-                      className="flex items-center gap-1 data-[state=active]:bg-amber-100/70 data-[state=active]:text-amber-900"
-                      disabled={
-                        !searchResults.some(
-                          (doc) =>
-                            doc.category?.toLowerCase() ===
-                            category.toLowerCase()
-                        )
-                      }
-                    >
-                      <Tag size={16} />
-                      <span>{category}</span>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-              {/* Filters for time and location */}
-              <div className="flex flex-wrap gap-4 mt-4 items-center">
-                {/* Time mode selector */}
-                <label className="text-sm font-medium text-gray-700">
-                  Time:
-                </label>
-                <select
-                  className="border rounded px-2 py-1"
-                  value={timeMode}
-                  onChange={(e) =>
-                    setTimeMode(e.target.value as "IN" | "BEFORE" | "AFTER")
-                  }
-                >
-                  <option value="IN">IN</option>
-                  <option value="BEFORE">BEFORE</option>
-                  <option value="AFTER">AFTER</option>
-                </select>
-                <select
-                  className="border rounded px-2 py-1"
-                  value={selectedYear}
-                  onChange={(e) => {
-                    setSelectedYear(e.target.value);
-                    setSelectedMonth("any");
-                  }}
-                >
-                  <option value="any">Any Year</option>
-                  {allYears.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-                {selectedYear !== "any" && (
-                  <select
-                    className="border rounded px-2 py-1"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                  >
-                    <option value="any">Any Month</option>
-                    {monthsForYear.map((month) => (
-                      <option key={month} value={month}>
-                        {month}
-                      </option>
+              <div className="flex flex-wrap gap-4 items-center">
+                {/* Category selector */}
+                <label className="text-sm font-medium text-gray-700">Category:</label>
+                <Select value={activeTab} onValueChange={setActiveTab}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <span className="flex items-center gap-1"><FileSearch size={16} />All</span>
+                    </SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category.toLowerCase()}>
+                        <span className="flex items-center gap-1"><Tag size={16} />{category}</span>
+                      </SelectItem>
                     ))}
-                  </select>
+                  </SelectContent>
+                </Select>
+                {/* Time mode selector */}
+                <label className="text-sm font-medium text-gray-700 ml-2">Time:</label>
+                <Select value={timeMode} onValueChange={v => setTimeMode(v as "IN" | "BEFORE" | "AFTER") }>
+                  <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IN">IN</SelectItem>
+                    <SelectItem value="BEFORE">BEFORE</SelectItem>
+                    <SelectItem value="AFTER">AFTER</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedYear} onValueChange={v => { setSelectedYear(v); setSelectedMonth("any"); }}>
+                  <SelectTrigger className="w-[110px]"><SelectValue placeholder="Any Year" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any Year</SelectItem>
+                    {allYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedYear !== "any" && (
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="w-[110px]"><SelectValue placeholder="Any Month" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Any Month</SelectItem>
+                      {monthsForYear.map(month => (
+                        <SelectItem key={month} value={month}>{month}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
                 {/* Location selector */}
-                <label className="text-sm font-medium text-gray-700 ml-4">
-                  Location:
-                </label>
-                <select
-                  className="border rounded px-2 py-1"
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                >
-                  <option value="any">Any Location</option>
-                  {allLocations.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </select>
+                <label className="text-sm font-medium text-gray-700 ml-2">Location:</label>
+                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                  <SelectTrigger className="w-[160px]"><SelectValue placeholder="Any Location" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any Location</SelectItem>
+                    {allLocations.map(loc => (
+                      <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

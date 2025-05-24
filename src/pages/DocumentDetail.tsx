@@ -130,15 +130,28 @@ const DocumentDetail = () => {
           </div>
 
           <div className="mt-8 pt-6 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <Tag size={16} className="text-gray-600" />
-              <div className="flex flex-wrap gap-2">
-                {document.tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary">
-                    {tag}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Show source and location as badges if present */}
+              {document.date && (
+                <div className="flex items-center gap-1">
+                  <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
+                    {document.date}
                   </Badge>
-                ))}
-              </div>
+                </div>
+              )}
+              {document.source && (
+                <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
+                  {document.source}
+                </Badge>
+              )}
+              {document.location && (
+                <>
+                  <Tag size={16} className="text-gray-600" />
+                  <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
+                    {document.location}
+                  </Badge>
+                </>
+              )}
             </div>
           </div>
         </div>

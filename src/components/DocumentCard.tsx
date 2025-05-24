@@ -98,19 +98,28 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
             <User size={12} className="text-amber-700/60" />
             <span>{document.author || "J. Krishnamurti"}</span>
           </div> */}
-          {document.tags && document.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 items-center">
+          {/* Show source and location as badges if present */}
+          {document.date && (
+            <div className="flex items-center gap-1">
+              <Calendar size={12} className="text-amber-700/60" />
+              <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
+                {document.date}
+              </Badge>
+            </div>
+          )}
+          {document.source && (
+            <div className="flex items-center gap-1">
+              <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
+                {document.source}
+              </Badge>
+            </div>
+          )}
+          {document.location && (
+            <div className="flex items-center gap-1">
               <Tag size={12} className="text-amber-700/60" />
-              {document.tags.slice(0, 3).map((tag, index) => (
-                <Badge key={index} variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
-                  {tag}
-                </Badge>
-              ))}
-              {document.tags.length > 3 && (
-                <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
-                  +{document.tags.length - 3}
-                </Badge>
-              )}
+              <Badge variant="secondary" className="font-normal text-xs bg-amber-50 text-amber-800 hover:bg-amber-100">
+                {document.location}
+              </Badge>
             </div>
           )}
         </CardFooter>
