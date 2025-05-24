@@ -248,19 +248,21 @@ const Index = () => {
                 </p>
               </div>
             ) : filteredResults.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {filteredResults.length === 0 && (
-                  <div className="col-span-full text-gray-500 italic text-center">No teachings found.</div>
-                )}
-                {paginatedResults.map((doc) => (
-                  <DocumentCard key={doc._id} document={doc} searchQuery={searchQuery} />
-                ))}
-              </div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                  {filteredResults.length === 0 && (
+                    <div className="col-span-full text-gray-500 italic text-center">No teachings found.</div>
+                  )}
+                  {paginatedResults.map((doc) => (
+                    <DocumentCard key={doc.id} document={doc} searchQuery={searchQuery} />
+                  ))}
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
             ) : (
               <div className="text-center py-12 bg-white rounded-lg shadow-sm border-l-4 border-l-amber-300 border-t border-r border-b border-gray-100">
                 <BookOpen
