@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "NODE_ENV=development python server/server.py",
+    "dev:server": "NODE_ENV=development python api/api.py",
     "dev:full": "concurrently 'npm run dev' 'npm run dev:server'",
     "build": "tsc && vite build",
     "build:dev": "tsc && vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "python server/server.py",
-    "start": "NODE_ENV=production python server/server.py",
+    "server": "python api/api.py",
+    "start": "NODE_ENV=production python api/api.py",
     "heroku-postbuild": "npm run build",
     "setup:search": "node scripts/setup-atlas-search.js"
   },

@@ -61,7 +61,7 @@ class ConnectRequest(BaseModel):
 class SearchRequest(BaseModel):
     query: str
     isHybridSearch: Optional[bool] = False
-    limit: Optional[int] = 30
+    limit: Optional[int] = 300
 
 # MongoDB connection endpoint
 @app.post("/api/mongodb/connect")
@@ -233,6 +233,19 @@ def format_document(doc: Dict[str, Any], query: str = None) -> Dict[str, Any]:
     elif query:
         doc['highlights'] = [dict(score = 6, content = query)]
 
+    # Extract source and location fields
+    source = doc.get('Text source')
+    country = doc.get('Country')
+    city = doc.get('City')
+    if country and city:
+        location = f"{country} - {city}"
+    elif country:
+        location = country
+    elif city:
+        location = city
+    else:
+        location = None
+
     return {
         "id": str(doc["_id"]),
         "title": doc.get("title"),
@@ -240,7 +253,8 @@ def format_document(doc: Dict[str, Any], query: str = None) -> Dict[str, Any]:
         "content": doc.get("content"),
         "category": doc.get("Talk Type"),
         "date": decode_date(doc.get("Date Code")),
-        "tags": [doc[k] for k in ['Text source', 'Country', 'City'] if doc.get(k)],
+        "source": source,
+        "location": location,
         "highlights": doc.get("highlights", []),
     }
 

@@ -30,7 +30,7 @@ const connectToMongoDB = async (uri: string, dbName = 'search_demo', collectionN
 const searchDocuments = async (
   query: string, 
   isHybridSearch: boolean = false, 
-  limit: number = 30
+  limit: number = 300
 ): Promise<Document[]> => {
   const response = await fetch(API_ENDPOINTS.MONGODB_SEARCH, {
     method: 'POST',

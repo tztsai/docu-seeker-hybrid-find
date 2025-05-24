@@ -27,6 +27,22 @@ const Index = () => {
   const [isMongoConnected, setIsMongoConnected] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
+  // Time and location filter state
+  const [timeMode, setTimeMode] = useState<'IN' | 'BEFORE' | 'AFTER'>('IN');
+  const [selectedYear, setSelectedYear] = useState<string>('any');
+  const [selectedMonth, setSelectedMonth] = useState<string>('any');
+  const [selectedLocation, setSelectedLocation] = useState<string>('any');
+
+  // Extract unique years and months from searchResults
+  const allDates = searchResults.map(doc => doc.date).filter(Boolean);
+  const allYears = Array.from(new Set(allDates.map(date => date?.slice(0, 4)))).filter(Boolean).sort();
+  const monthsForYear = selectedYear !== 'any'
+    ? Array.from(new Set(searchResults.filter(doc => doc.date?.slice(0,4) === selectedYear).map(doc => doc.date?.slice(5,7)))).filter(Boolean).sort()
+    : [];
+
+  // Extract unique locations
+  const allLocations = Array.from(new Set(searchResults.map(doc => doc.location).filter(Boolean)));
+
   useEffect(() => {
     // Check MongoDB connection status on mount via API
     const checkConnection = async () => {
@@ -56,11 +72,31 @@ const Index = () => {
     }
   };
 
-  // Filter results by category when tab changes, handle null categories
-  const filteredResults = activeTab === 'all'
-    ? searchResults
-    : searchResults.filter(doc =>
-      doc.category?.toLowerCase() === activeTab.toLowerCase());
+  // Filter results by category, time, and location
+  const filteredResults = searchResults.filter(doc => {
+    // Category
+    const categoryMatch = activeTab === 'all' || doc.category?.toLowerCase() === activeTab.toLowerCase();
+    // Location
+    const locationMatch = selectedLocation === 'any' || doc.location === selectedLocation;
+    // Time
+    let timeMatch = true;
+    if (selectedYear !== 'any') {
+      const docYear = doc.date?.slice(0,4);
+      if (!docYear) return false;
+      if (timeMode === 'IN') {
+        timeMatch = docYear === selectedYear;
+      } else if (timeMode === 'BEFORE') {
+        timeMatch = docYear < selectedYear;
+      } else if (timeMode === 'AFTER') {
+        timeMatch = docYear > selectedYear;
+      }
+      if (timeMatch && selectedMonth !== 'any' && docYear === selectedYear) {
+        const docMonth = doc.date?.slice(5,7);
+        timeMatch = docMonth === selectedMonth;
+      }
+    }
+    return categoryMatch && locationMatch && timeMatch;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -118,6 +154,54 @@ const Index = () => {
                     ))}
                   </TabsList>
                 </Tabs>
+                {/* Filters for time and location */}
+                <div className="flex flex-wrap gap-4 mt-4 items-center">
+                  {/* Time mode selector */}
+                  <label className="text-sm font-medium text-gray-700">Time:</label>
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={timeMode}
+                    onChange={e => setTimeMode(e.target.value as 'IN' | 'BEFORE' | 'AFTER')}
+                  >
+                    <option value="IN">IN</option>
+                    <option value="BEFORE">BEFORE</option>
+                    <option value="AFTER">AFTER</option>
+                  </select>
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={selectedYear}
+                    onChange={e => { setSelectedYear(e.target.value); setSelectedMonth('any'); }}
+                  >
+                    <option value="any">Any Year</option>
+                    {allYears.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  {selectedYear !== 'any' && (
+                    <select
+                      className="border rounded px-2 py-1"
+                      value={selectedMonth}
+                      onChange={e => setSelectedMonth(e.target.value)}
+                    >
+                      <option value="any">Any Month</option>
+                      {monthsForYear.map(month => (
+                        <option key={month} value={month}>{month}</option>
+                      ))}
+                    </select>
+                  )}
+                  {/* Location selector */}
+                  <label className="text-sm font-medium text-gray-700 ml-4">Location:</label>
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={selectedLocation}
+                    onChange={e => setSelectedLocation(e.target.value)}
+                  >
+                    <option value="any">Any Location</option>
+                    {allLocations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
 
