@@ -55,11 +55,6 @@ const Index = () => {
           .sort()
       : [];
 
-  // Extract unique locations
-  const allLocations = Array.from(
-    new Set(searchResults.map((doc) => doc.location).filter(Boolean))
-  );
-
   useEffect(() => {
     // Check MongoDB connection status on mount via API
     const checkConnection = async () => {
@@ -128,6 +123,11 @@ const Index = () => {
   const paginatedResults = filteredResults.slice(
     (currentPage - 1) * RESULTS_PER_PAGE,
     currentPage * RESULTS_PER_PAGE
+  );
+
+  // Extract unique locations from filteredResults for dynamic location menu
+  const allLocations = Array.from(
+    new Set(filteredResults.map((doc) => doc.location).filter(Boolean))
   );
 
   // Reset to page 1 when filters or results change
