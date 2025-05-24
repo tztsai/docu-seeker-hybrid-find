@@ -92,7 +92,7 @@ const Index = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const RESULTS_PER_PAGE = 20;
+  const RESULTS_PER_PAGE = 15;
 
   // Filter results by category, time, and location
   const filteredResults = searchResults.filter((doc) => {
@@ -156,7 +156,21 @@ const Index = () => {
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {searchPerformed && (
+        {isSearching ? (
+          <div className="text-center py-12">
+            <Loader2
+              size={40}
+              className="mx-auto text-amber-600 animate-spin mb-4"
+            />
+            <p className="text-gray-600">
+              Searching Krishnamurti's teachings...
+            </p>
+            <p className="text-xs text-gray-400 mt-2 italic max-w-md mx-auto">
+              "In the search for truth, beauty, and love, man comes
+              naturally to himself."
+            </p>
+          </div>
+        ) : searchPerformed && (
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">
@@ -233,21 +247,7 @@ const Index = () => {
               </div>
             </div>
 
-            {isSearching ? (
-              <div className="text-center py-12">
-                <Loader2
-                  size={40}
-                  className="mx-auto text-amber-600 animate-spin mb-4"
-                />
-                <p className="text-gray-600">
-                  Searching Krishnamurti's teachings...
-                </p>
-                <p className="text-xs text-gray-400 mt-2 italic max-w-md mx-auto">
-                  "In the search for truth, beauty, and love, man comes
-                  naturally to himself."
-                </p>
-              </div>
-            ) : filteredResults.length > 0 ? (
+            {filteredResults.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                   {filteredResults.length === 0 && (
