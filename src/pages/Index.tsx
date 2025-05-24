@@ -126,8 +126,8 @@ const Index = () => {
   );
 
   // Extract unique locations from filteredResults for dynamic location menu
-  const allLocations = Array.from(
-    new Set(filteredResults.map((doc) => doc.location).filter(Boolean))
+  const locations = Array.from(
+    new Set(filteredResults.map((doc) => doc.location).filter(Boolean).sort())
   );
 
   // Reset to page 1 when filters or results change
@@ -239,7 +239,7 @@ const Index = () => {
                   <SelectTrigger className="w-[160px]"><SelectValue placeholder="Any Location" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="any">Any Location</SelectItem>
-                    {allLocations.map(loc => (
+                    {locations.map(loc => (
                       <SelectItem key={loc} value={loc}>{loc}</SelectItem>
                     ))}
                   </SelectContent>
