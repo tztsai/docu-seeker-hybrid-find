@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useSearchState } from "@/hooks/useSearchState";
 import { highlightTextWithScores } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Pagination from "@/components/Pagination";
 
 const Index = () => {
   const {
@@ -76,17 +77,22 @@ const Index = () => {
 
     try {
       await executeSearch({ query, isHybrid });
-
-      // Extract unique categories
-      const uniqueCategories = [
-        ...new Set(searchResults.map((doc) => doc.category).filter(Boolean)),
-      ];
-      setCategories(uniqueCategories);
     } catch (error) {
       console.error("Search error:", error);
       toast.error("Search failed. Please try again or check your connection.");
     }
   };
+
+  useEffect(() => {
+    const uniqueCategories = [
+      ...new Set(searchResults.map((doc) => doc.category).filter(Boolean)),
+    ];
+    setCategories(uniqueCategories);
+  }, [searchResults]);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const RESULTS_PER_PAGE = 20;
 
   // Filter results by category, time, and location
   const filteredResults = searchResults.filter((doc) => {
@@ -117,6 +123,17 @@ const Index = () => {
     return categoryMatch && locationMatch && timeMatch;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredResults.length / RESULTS_PER_PAGE);
+  const paginatedResults = filteredResults.slice(
+    (currentPage - 1) * RESULTS_PER_PAGE,
+    currentPage * RESULTS_PER_PAGE
+  );
+
+  // Reset to page 1 when filters or results change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, selectedLocation, selectedYear, selectedMonth, timeMode, searchResults]);
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-12">
@@ -231,15 +248,19 @@ const Index = () => {
                 </p>
               </div>
             ) : filteredResults.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                {filteredResults.map((doc) => (
-                  <DocumentCard
-                    key={doc.id}
-                    document={doc}
-                    searchQuery={searchQuery}
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                {filteredResults.length === 0 && (
+                  <div className="col-span-full text-gray-500 italic text-center">No teachings found.</div>
+                )}
+                {paginatedResults.map((doc) => (
+                  <DocumentCard key={doc._id} document={doc} searchQuery={searchQuery} />
                 ))}
               </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             ) : (
               <div className="text-center py-12 bg-white rounded-lg shadow-sm border-l-4 border-l-amber-300 border-t border-r border-b border-gray-100">
                 <BookOpen
